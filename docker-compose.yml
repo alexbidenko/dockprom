@@ -99,7 +99,6 @@ services:
       - 3000
     networks:
       - monitor-net
-      - server
     labels:
       org.label-schema.group: "monitoring"
 
@@ -131,5 +130,6 @@ services:
     restart: unless-stopped
     networks:
       - monitor-net
+      - server
     labels:
       org.label-schema.group: "monitoring"
