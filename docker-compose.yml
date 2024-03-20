@@ -11,9 +11,8 @@ volumes:
     grafana_data: {}
 
 services:
-
   prometheus:
-    image: prom/prometheus:v2.37.0
+    image: prom/prometheus:v2.50.1
     volumes:
       - ./prometheus:/etc/prometheus
       - prometheus_data:/prometheus
@@ -33,7 +32,7 @@ services:
       org.label-schema.group: "monitoring"
 
   alertmanager:
-    image: prom/alertmanager:v0.24.0
+    image: prom/alertmanager:v0.27.0
     volumes:
       - ./alertmanager:/etc/alertmanager
     command:
@@ -48,7 +47,7 @@ services:
       org.label-schema.group: "monitoring"
 
   nodeexporter:
-    image: prom/node-exporter:v1.3.1
+    image: prom/node-exporter:v1.7.0
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -67,7 +66,7 @@ services:
       org.label-schema.group: "monitoring"
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.44.0
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
     privileged: true
     devices:
       - /dev/kmsg:/dev/kmsg
@@ -86,8 +85,7 @@ services:
       org.label-schema.group: "monitoring"
 
   grafana:
-    image: grafana/grafana:9.0.5
-    container_name: admire-grafana
+    image: grafana/grafana:10.4.0
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
@@ -106,10 +104,31 @@ services:
       org.label-schema.group: "monitoring"
 
   pushgateway:
-    image: prom/pushgateway:v1.4.3
+    image: prom/pushgateway:v1.7.0
     restart: unless-stopped
     expose:
       - 9091
+    networks:
+      - monitor-net
+    labels:
+      org.label-schema.group: "monitoring"
+
+  caddy:
+    image: caddy:2.7.6
+    container_name: dockprom-caddy
+    expose:
+      - 3000
+      - 8080
+      - 9090
+      - 9093
+      - 9091
+    volumes:
+      - ./caddy:/etc/caddy
+    environment:
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH:-$2a$14$1l.IozJx7xQRVmlkEQ32OeEEfP5mRxTpbDTCTcXRqn19gXD8YK1pO}
+    restart: unless-stopped
     networks:
       - monitor-net
     labels:
